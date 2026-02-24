@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>German B1 Level Game</title>
+<style>
+body { font-family: Arial; text-align: center; background:#f4f6f9; }
+#score, #level { font-size:18px; font-weight:bold; margin:5px; }
+.container { display:flex; justify-content:space-around; margin-top:20px; }
+.column { width:40%; }
+.word {
+    margin:6px; padding:8px; background:white;
+    border-radius:6px; cursor:pointer; border:1px solid #ccc;
+}
+.selected { background:#cce5ff; }
+.correct { background:#b6f5b6; pointer-events:none; opacity:0.6; }
+.wrong { background:#ffb3b3; }
+#message { margin-top:20px; font-size:20px; color:green; font-weight:bold; }
+button { padding:8px 15px; margin-top:15px; }
+</style>
+</head>
+<body>
+
+<h2>German B1 Verb Matching Game</h2>
+<div id="level">Level: 1</div>
+<div id="score">Score: 0</div>
+
+<div class="container">
+<div class="column" id="germanColumn"></div>
+<div class="column" id="englishColumn"></div>
+</div>
+
+<div id="message"></div>
+<button onclick="nextLevel()">Next Level</button>
+
+<script>
+
+// ===== 100 B1 VERBS =====
+const allWords = [
+{german:"anfangen", english:"to begin"},
+{german:"aufhören", english:"to stop"},
+{german:"anrufen", english:"to call"},
+{german:"antworten", english:"to answer"},
+{german:"arbeiten", english:"to work"},
+{german:"bleiben", english:"to stay"},
+{german:"brauchen", english:"to need"},
+{german:"bringen", english:"to bring"},
+{german:"denken", english:"to think"},
+{german:"diskutieren", english:"to discuss"},
+{german:"einladen", english:"to invite"},
+{german:"empfehlen", english:"to recommend"},
+{german:"entscheiden", english:"to decide"},
+{german:"erklären", english:"to explain"},
+{german:"erlauben", english:"to allow"},
+{german:"erzählen", english:"to tell"},
+{german:"essen", english:"to eat"},
+{german:"fahren", english:"to drive"},
+{german:"fallen", english:"to fall"},
+{german:"finden", english:"to find"},
+{german:"fliegen", english:"to fly"},
+{german:"folgen", english:"to follow"},
+{german:"fragen", english:"to ask"},
+{german:"geben", english:"to give"},
+{german:"gefallen", english:"to like"},
+{german:"gehen", english:"to go"},
+{german:"gehören", english:"to belong"},
+{german:"gewinnen", english:"to win"},
+{german:"glauben", english:"to believe"},
+{german:"halten", english:"to hold"},
+{german:"helfen", english:"to help"},
+{german:"kennen", english:"to know"},
+{german:"kaufen", english:"to buy"},
+{german:"kommen", english:"to come"},
+{german:"können", english:"can"},
+{german:"lassen", english:"to let"},
+{german:"laufen", english:"to run"},
+{german:"leben", english:"to live"},
+{german:"lernen", english:"to learn"},
+{german:"lesen", english:"to read"},
+{german:"liegen", english:"to lie"},
+{german:"machen", english:"to do"},
+{german:"meinen", english:"to mean"},
+{german:"mieten", english:"to rent"},
+{german:"mögen", english:"to like"},
+{german:"müssen", english:"must"},
+{german:"nehmen", english:"to take"},
+{german:"nennen", english:"to name"},
+{german:"öffnen", english:"to open"},
+{german:"planen", english:"to plan"},
+{german:"probieren", english:"to try"},
+{german:"reden", english:"to talk"},
+{german:"reisen", english:"to travel"},
+{german:"rufen", english:"to call"},
+{german:"sagen", english:"to say"},
+{german:"schaffen", english:"to manage"},
+{german:"schauen", english:"to look"},
+{german:"scheinen", english:"to seem"},
+{german:"schicken", english:"to send"},
+{german:"schlafen", english:"to sleep"},
+{german:"schließen", english:"to close"},
+{german:"schneiden", english:"to cut"},
+{german:"schreiben", english:"to write"},
+{german:"schwimmen", english:"to swim"},
+{german:"sehen", english:"to see"},
+{german:"sein", english:"to be"},
+{german:"singen", english:"to sing"},
+{german:"sitzen", english:"to sit"},
+{german:"spielen", english:"to play"},
+{german:"sprechen", english:"to speak"},
+{german:"springen", english:"to jump"},
+{german:"stehen", english:"to stand"},
+{german:"steigen", english:"to climb"},
+{german:"stellen", english:"to place"},
+{german:"sterben", english:"to die"},
+{german:"studieren", english:"to study"},
+{german:"suchen", english:"to search"},
+{german:"tanzen", english:"to dance"},
+{german:"teilen", english:"to share"},
+{german:"tragen", english:"to carry"},
+{german:"treffen", english:"to meet"},
+{german:"trinken", english:"to drink"},
+{german:"tun", english:"to do"},
+{german:"vergessen", english:"to forget"},
+{german:"vergleichen", english:"to compare"},
+{german:"verlieren", english:"to lose"},
+{german:"verstehen", english:"to understand"},
+{german:"versuchen", english:"to try"},
+{german:"wachsen", english:"to grow"},
+{german:"warten", english:"to wait"},
+{german:"waschen", english:"to wash"},
+{german:"werden", english:"to become"},
+{german:"werfen", english:"to throw"},
+{german:"wissen", english:"to know"},
+{german:"wohnen", english:"to live"},
+{german:"wollen", english:"to want"},
+{german:"zeigen", english:"to show"},
+{german:"ziehen", english:"to pull"}
+];
+
+let level = 1;
+let score = 0;
+let selectedGerman = null;
+let matchedCount = 0;
+let levelWords = [];
+
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+function loadLevel(){
+matchedCount = 0;
+document.getElementById("message").innerText = "";
+document.getElementById("level").innerText = "Level: " + level;
+
+let start = (level-1)*10;
+levelWords = allWords.slice(start,start+10);
+
+let germanCol=document.getElementById("germanColumn");
+let englishCol=document.getElementById("englishColumn");
+germanCol.innerHTML=""; englishCol.innerHTML="";
+
+shuffle(levelWords).forEach(w=>{
+let d=document.createElement("div");
+d.className="word"; d.innerText=w.german;
+d.onclick=()=>selectGerman(w,d);
+germanCol.appendChild(d);
+});
+
+shuffle(levelWords).forEach(w=>{
+let d=document.createElement("div");
+d.className="word"; d.innerText=w.english;
+d.onclick=()=>checkMatch(w,d);
+englishCol.appendChild(d);
+});
+}
+
+function selectGerman(word,el){
+if(el.classList.contains("correct"))return;
+clearSelection();
+selectedGerman={word:word,element:el};
+el.classList.add("selected");
+}
+
+function checkMatch(word,el){
+if(!selectedGerman)return;
+if(selectedGerman.word.english===word.english){
+selectedGerman.element.classList.add("correct");
+el.classList.add("correct");
+score++; matchedCount++;
+if(matchedCount===10){
+document.getElementById("message").innerText="Level Completed!";
+}
+}else{
+el.classList.add("wrong");
+setTimeout(()=>el.classList.remove("wrong"),400);
+score--;
+}
+document.getElementById("score").innerText="Score: "+score;
+clearSelection(); selectedGerman=null;
+}
+
+function clearSelection(){
+document.querySelectorAll(".word").forEach(e=>e.classList.remove("selected"));
+}
+
+function nextLevel(){
+if(level<10){ level++; loadLevel(); }
+else{
+document.getElementById("message").innerText="🎉 All 100 Words Completed!";
+}
+}
+
+loadLevel();
+
+</script>
+</body>
+</html>
